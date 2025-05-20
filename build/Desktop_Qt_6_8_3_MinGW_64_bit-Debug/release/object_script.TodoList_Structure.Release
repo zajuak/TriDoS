@@ -1,0 +1,15 @@
+release/dailyplan.o
+release/dailysentencedialog.o
+release/ddlreminder.o
+release/longtermproject.o
+release/main.o
+release/mainwindow.o
+release/pomodorowidget.o
+release/thecalendar.o
+release/moc_dailyplan.o
+release/moc_dailysentencedialog.o
+release/moc_ddlreminder.o
+release/moc_longtermproject.o
+release/moc_mainwindow.o
+release/moc_pomodorowidget.o
+release/moc_thecalendar.o

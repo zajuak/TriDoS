@@ -1,0 +1,27 @@
+# 忽略 Qt 编译目录
+build*/
+build-*/
+*/build/
+
+# 忽略编译生成的文件
+*.o
+*.a
+*.so
+*.dll
+*.exe
+
+# 忽略 Qt Creator 临时文件
+*.pro.user
+*.autosave
+.qtc/
+
+# 忽略调试/发布目录
+debug/
+release/
+
+# 忽略自动生成的文件
+Makefile
+moc_*
+qrc_*
+ui_*
+*.moc
