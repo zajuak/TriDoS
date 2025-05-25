@@ -6,11 +6,9 @@
 #include<Qdate>
 #include <QStringList>
 #include <QRandomGenerator>
-
-
-
+#include<QSettings>
 class Ui_TheCalendar;
-
+class CalendarDialog;
 class TheCalendar : public QWidget
 {
     Q_OBJECT
@@ -27,6 +25,7 @@ private slots:
     void checkAndUpdateButtons();
     void on_dailySentence_clicked();
 
+
 private:
     Ui_TheCalendar *ui;
     void updateDayButton(QPushButton* button, Qt::DayOfWeek day);
@@ -36,6 +35,11 @@ private:
 
     void getRandomSentence();
     QStringList sentences;
+    QString m_todaySentence;
+    QDate m_lastSentenceDate;
+
+    void saveDailySentence();
+    void loadDailySentence();
 
 
 };
