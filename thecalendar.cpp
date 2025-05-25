@@ -8,11 +8,12 @@
 #include <QCalendarWidget>
 #include <QDialog>
 #include <QVBoxLayout>
-#include <QDate>
 #include <QTimer>
 #include <QStringList>
 #include <QRandomGenerator>
 #include"dailysentencedialog.h"
+#include"ddlreminder.h"
+#include"mycalendar.h"
 
 
 TheCalendar::TheCalendar(QWidget *parent)
@@ -34,11 +35,11 @@ TheCalendar::TheCalendar(QWidget *parent)
     midnightTimer->start(60000); // 1分钟检查一次
 
     sentences << "生活就像一盒巧克力，你永远不知道下一颗是什么味道"
-              << "代码写得好，bug少烦恼"
-              << "Qt让GUI开发变得简单"
-              << "每天学习一点点，进步不止一点点"
-              << "坚持就是胜利"
-              << "机会总是留给有准备的人";
+              << "向春天走去，别烂在过去和梦里"
+              << "用舍由时，行藏在我"
+              << "当你为错过太阳而哭泣时，那么你也将失去群星了"
+              << "推石上山这场搏斗本身，就足以充实一颗人心"
+              << "此心安处是吾乡";
 
 }
 
@@ -115,41 +116,61 @@ void TheCalendar::checkAndUpdateButtons()
     }
 }
 
-class CalendarDialog : public QDialog {
-public:
-    CalendarDialog(QWidget *parent = nullptr) : QDialog(parent) {
-        // 创建日历控件
-        calendar = new QCalendarWidget(this);
 
-        // 设置对话框布局
-        QVBoxLayout *layout = new QVBoxLayout(this);
-        layout->addWidget(calendar);
 
-        // 设置对话框属性
-        setWindowTitle("选择日期");
-        resize(400, 300);
-    }
-
-private:
-    QCalendarWidget *calendar;
-};
 
 void TheCalendar::on_pushButton_2_clicked()
 {
-    QCalendarWidget *calendar = new QCalendarWidget(this);
-    calendar->setWindowFlags(Qt::Window);
-    calendar->setWindowTitle("日历");
-    calendar->show();
+    ddlReminder* reminder = new ddlReminder();
+    MyCalendar* calendar = new MyCalendar(reminder);
+
+    // 当需要显示日历时
+    calendar->showCalendar();
 }
 
 void TheCalendar::on_dailySentence_clicked()
 {
-    int index = QRandomGenerator::global()->bounded(sentences.size());
-    QString sentence = sentences.at(index);
+    QDate today = QDate::currentDate();
 
-    DailySentenceDialog *dialog = new DailySentenceDialog(sentence, this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose); // 关闭时自动删除
+    // 需要重新选择句子的情况：
+    // 1. 还没有选择过句子(m_todaySentence为空)
+    // 2. 上次选择不是今天
+    if (m_todaySentence.isEmpty() || m_lastSentenceDate != today) {
+        int index = QRandomGenerator::global()->bounded(sentences.size());
+        m_todaySentence = sentences.at(index);
+        m_lastSentenceDate = today;
+        saveDailySentence();
+    }
+
+    DailySentenceDialog *dialog = new DailySentenceDialog(m_todaySentence, this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    QString title = (m_lastSentenceDate == QDate::currentDate())
+                        ? "今日箴言"
+                        : "新的一天，新的箴言";
+    dialog->setWindowTitle(title);
     dialog->show();
 
 }
 
+void TheCalendar::saveDailySentence()
+{
+    QSettings settings("MyApp", "DailySentence");
+    settings.beginGroup("DailySentence");
+    settings.setValue("text", m_todaySentence);
+    settings.setValue("date", m_lastSentenceDate);
+    settings.endGroup();
+}
+
+void TheCalendar::loadDailySentence()
+{
+    QSettings settings("MyApp", "DailySentence");
+    settings.beginGroup("DailySentence");
+    m_todaySentence = settings.value("text").toString();
+    m_lastSentenceDate = settings.value("date").toDate();
+    settings.endGroup();
+
+    // 如果存储的日期不是今天，则视为无效
+    if (m_lastSentenceDate != QDate::currentDate()) {
+        m_todaySentence.clear();
+    }
+}
