@@ -16,7 +16,14 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     pomodorowidget.cpp \
-    thecalendar.cpp
+    projectitem.cpp \
+    projectwidget.cpp \
+    thecalendar.cpp\
+    ddlitem.cpp\
+    mycalendar.cpp\
+    calendardialog.cpp\
+    ddlwidget.cpp\
+
 
 HEADERS += \
     dailyplan.h \
@@ -25,7 +32,13 @@ HEADERS += \
     longtermproject.h \
     mainwindow.h \
     pomodorowidget.h \
-    thecalendar.h
+    projectitem.h \
+    projectwidget.h \
+    thecalendar.h\
+    ddlitem.h\
+    mycalendar.h\
+    calendardialog.h\
+    ddlwidget.h\
 
 FORMS += \
     dailyplan.ui \
