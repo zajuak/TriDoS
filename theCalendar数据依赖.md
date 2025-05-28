@@ -9,3 +9,9 @@
 # ddlReminder类数据依赖
 这部分具体依赖于“Longtermproject"类的实现方式。
 我认为可以通过提供的接口，获得某个project大项的截止日期并且更新到这个ddl中，更细节的部分就不用了
+# dailyplan类提供的函数：
+## 给longtermproject
+一个add函数，可以调用某一天的该函数从而将计划加入当天并进行显示
+## 给thecalendar
+每一个dailyplan只负责一天的事情，建议thercalendar定义一个dailyplan的数组
+dailyplan中的ui会显示当日的事件
