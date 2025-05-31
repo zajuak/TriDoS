@@ -187,8 +187,9 @@ void LongTermProject::on_pushButton_clicked()
             connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
             if (dialog.exec() != QDialog::Accepted) return;
             goalDeadline = dateEdit->date();
-            QString title=projectTitle+"-"+goalTitle;
+            QString title="project"+projectTitle+"-"+goalTitle;
             ddl->add(title,goalDeadline,goalDesc);
+            ddl->saveToFile("ddl_reminder.json");
         }
 
         goals.append(goalitem(goalTitle, goalDeadline, false, goalDesc));
@@ -197,7 +198,10 @@ void LongTermProject::on_pushButton_clicked()
 
     // 创建并添加项目
     projectItem newProject(projectTitle, projectDeadline, goals, projectDesc, goalCount);
-    if(i)   ddl->add(projectTitle,projectDeadline,projectDesc);
+    if(i)   {
+        ddl->add(projectTitle,projectDeadline,projectDesc);
+        ddl->saveToFile("ddl_reminder.json");
+    }
     m_projects.append(newProject);
     refreshDisplay();
     saveToFile(m_saveFilePath);
