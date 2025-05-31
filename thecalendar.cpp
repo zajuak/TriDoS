@@ -116,13 +116,16 @@ void TheCalendar::checkAndUpdateButtons()
     }
 }
 
-
+void TheCalendar::set_dailyplan(DailyPlan*dailyplan)
+{
+    m_dailyplan=dailyplan;
+}
 
 
 void TheCalendar::on_pushButton_2_clicked()
 {
     ddlReminder* reminder = new ddlReminder();
-    MyCalendar* calendar = new MyCalendar(reminder);
+    MyCalendar* calendar = new MyCalendar(reminder,m_dailyplan);
 
     // 当需要显示日历时
     calendar->showCalendar();

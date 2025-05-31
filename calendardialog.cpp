@@ -1,17 +1,22 @@
 #include "calendardialog.h"
 #include <QVBoxLayout>
 #include <QMap>
-
-CalendarDialog::CalendarDialog(QWidget *parent)
+#include"dailyplan.h"
+CalendarDialog::CalendarDialog(DailyPlan *dailyplan,QWidget *parent)
     : QDialog(parent),
-    m_calendar(new QCalendarWidget(this))
+    m_calendar(new QCalendarWidget(this)),
+    m_dailyplan(dailyplan)
 {
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(m_calendar);
 
     setWindowTitle("DDL日历视图");
     resize(500, 400);
-
+    connect(m_calendar, &QCalendarWidget::clicked, [this](const QDate &date) {
+        QString dateStr = date.toString("yyyy-MM-dd");
+        m_dailyplan->setDate(dateStr);  // 直接修改主窗口的DailyPlan
+        qDebug() << "切换到日期:" << dateStr;
+    });
     setupDateFormats();
 }
 

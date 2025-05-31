@@ -4,10 +4,11 @@
 #include "calendardialog.h"
 #include <QDebug>
 
-MyCalendar::MyCalendar(ddlReminder* ddlManager, QWidget *parent)
+MyCalendar::MyCalendar(ddlReminder* ddlManager,DailyPlan*dailyplan, QWidget *parent)
     : QWidget(parent),
-    m_calendarDialog(new CalendarDialog(this)),
-    m_ddlManager(ddlManager)
+    m_calendarDialog(new CalendarDialog(dailyplan,this)),
+    m_ddlManager(ddlManager),
+    m_dailyplan(dailyplan)
 {
     // 连接ddlReminder的数据变化信号
     connect(m_ddlManager, &ddlReminder::dataChanged,

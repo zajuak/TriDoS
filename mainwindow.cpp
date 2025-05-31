@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     ddlReminder *ddl=new ddlReminder(this);
     LongTermProject *myproject=new LongTermProject(this);
     myproject->setDDLReminder(ddl);
+    calendar->set_dailyplan(plan);
     // 在初始化代码中设置
     QPalette calendarPalette = calendar->palette();
     calendarPalette.setColor(QPalette::Window, QColor(255, 255, 255, 180));

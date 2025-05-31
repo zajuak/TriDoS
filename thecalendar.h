@@ -7,6 +7,7 @@
 #include <QStringList>
 #include <QRandomGenerator>
 #include<QSettings>
+#include"dailyplan.h"
 class Ui_TheCalendar;
 class CalendarDialog;
 class TheCalendar : public QWidget
@@ -17,6 +18,7 @@ public:
     explicit TheCalendar(QWidget *parent = nullptr);
 
     ~TheCalendar();
+    void set_dailyplan(DailyPlan*dailyplan);
 
 
 private slots:
@@ -40,7 +42,7 @@ private:
 
     void saveDailySentence();
     void loadDailySentence();
-
+    DailyPlan*m_dailyplan;
 
 };
 
