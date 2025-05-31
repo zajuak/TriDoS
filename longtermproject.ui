@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>655</width>
+    <height>411</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -62,8 +62,8 @@
     <rect>
      <x>10</x>
      <y>60</y>
-     <width>541</width>
-     <height>301</height>
+     <width>631</width>
+     <height>321</height>
     </rect>
    </property>
    <property name="widgetResizable">
@@ -74,8 +74,8 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>539</width>
-      <height>299</height>
+      <width>629</width>
+      <height>319</height>
      </rect>
     </property>
    </widget>
