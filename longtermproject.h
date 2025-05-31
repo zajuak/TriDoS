@@ -9,6 +9,7 @@
 #include<QDate>
 #include "projectitem.h"
 #include "projectwidget.h"
+#include "ddlreminder.h"
 
 class QVBoxLayout;
 class QScrollArea;
@@ -26,6 +27,7 @@ class LongTermProject : public QWidget
 
 public:
     explicit LongTermProject(QWidget *parent = nullptr);
+    void setDDLReminder(ddlReminder *reminder);
     void addProject(const projectItem &item);
     void loadFromFile(const QString &filename);
     void saveToFile(const QString &filename);
@@ -44,7 +46,8 @@ private:
     QWidget *m_scrollContent;
     QVBoxLayout *m_layout;
     QList<projectItem> m_projects;
-    QString m_saveFilePath;
+    QString m_saveFilePath=" longtermproject.json";
+    ddlReminder *ddl;
 };
 
 #endif // LONGTERMPROJECT_H

@@ -1,6 +1,8 @@
 #include "longtermproject.h"
 #include "ui_longtermproject.h"
 #include "projectwidget.h"
+#include "ddlreminder.h"
+#include "mainwindow.h"
 #include<QFIle>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -15,7 +17,7 @@ LongTermProject::LongTermProject(QWidget *parent)
     , ui(new Ui::LongTermProject)
 {
     ui->setupUi(this);
-    QString m_saveFilePath = "longtermproject.json";
+    QString m_saveFilePath = " longtermproject.json";
     m_scrollContent = new QWidget;
     m_layout = new QVBoxLayout(m_scrollContent);
     m_layout->setAlignment(Qt::AlignTop); // 防止内容集中在中间
@@ -30,7 +32,9 @@ void LongTermProject::addProject(const projectItem &item) {
     connect(widget, &projectItemWidget::deleteRequested, this, &LongTermProject::removeProject);
     m_layout->addWidget(widget);
 }
-
+void LongTermProject::setDDLReminder(ddlReminder *reminder) {
+    ddl = reminder;
+}
 void LongTermProject::removeProject(projectItemWidget *widget) {
     projectItem item = widget->getItem();
 
@@ -44,6 +48,7 @@ void LongTermProject::removeProject(projectItemWidget *widget) {
     }
     if (index != -1) {
         m_projects.removeAt(index);
+        qDebug()<<"delete"<<m_saveFilePath;
     }
 
     m_layout->removeWidget(widget);
@@ -133,10 +138,11 @@ void LongTermProject::on_pushButton_clicked()
         QMessageBox::Yes | QMessageBox::No);
 
     QDate projectDeadline;
+    int i=0;
     if (hasDeadline == QMessageBox::Yes) {
         QDialog deadlineDialog(this);
         QFormLayout deadlineForm(&deadlineDialog);
-
+        i=1;
         QDateEdit *dateEdit = new QDateEdit(QDate::currentDate(), &deadlineDialog);
         dateEdit->setCalendarPopup(true);
         dateEdit->setMinimumDate(QDate::currentDate());
@@ -181,15 +187,18 @@ void LongTermProject::on_pushButton_clicked()
             connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
             if (dialog.exec() != QDialog::Accepted) return;
             goalDeadline = dateEdit->date();
+            QString title=projectTitle+"-"+goalTitle;
+            ddl->add(title,goalDeadline,goalDesc);
         }
 
         goals.append(goalitem(goalTitle, goalDeadline, false, goalDesc));
+
     }
 
     // 创建并添加项目
     projectItem newProject(projectTitle, projectDeadline, goals, projectDesc, goalCount);
+    if(i)   ddl->add(projectTitle,projectDeadline,projectDesc);
     m_projects.append(newProject);
-
     refreshDisplay();
     saveToFile(m_saveFilePath);
     emit dataChanged();
