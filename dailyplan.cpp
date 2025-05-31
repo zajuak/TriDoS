@@ -195,6 +195,7 @@ void DailyPlan::Change_Schedule(){//全面更新schedule
         while (QLayoutItem *item = oldLayout->takeAt(0)) {
             if (item->widget()) {
                 item->widget()->setParent(nullptr);
+                //item->widget()->setEnabled(false);
             }
             delete item;
         }
@@ -355,18 +356,43 @@ void DailyPlan::Delete_Issue(){
     else{
         ui->DeleteIssue->setText("Delete");
         ui->ModiIssue->setText("Clear");
-        for(auto i = ScheduleButtons.begin();i!=ScheduleButtons.end();i++){
-            if((*i)->Get_Title()==ui->IssueTitle->text()){
-                ScheduleButtons.erase(i);
-                ui->ScheduleContent->layout()->removeWidget((*i));
-                Change_Schedule();
-                ui->IssueTitle->setText("null");
-                ui->IssueDura->setText("null");
-                ui->IssueDetail->setText("null");
-                ui->Kinds->setText("No Kind");
-                ui->checkBox->setCheckState(Qt::Unchecked);
-                ui->ScheduleScroll->viewport()->update();
-                break;
+        if(ui->HabitOrToday->text()=="日程表"){
+            for(auto i = ScheduleButtons.begin();i!=ScheduleButtons.end();i++){
+                if((*i)->Get_Title()==ui->IssueTitle->text()){
+                    ScheduleButtons.erase(i);
+                    (*i)->setParent(nullptr);
+                    ui->ScheduleContent->layout()->removeWidget((*i));
+                    //(*i)->deleteLater();
+                    //Change_Schedule();
+                    ui->IssueTitle->setText("null");
+                    ui->IssueDura->setText("null");
+                    ui->IssueDetail->setText("null");
+                    ui->Kinds->setText("No Kind");
+                    ui->checkBox->setCheckState(Qt::Unchecked);
+                    ui->ScheduleScroll->viewport()->update();
+                    IssueSaveToFile(Date+".json");
+                    break;
+                }
+            }
+        }
+        else{
+            for(auto i = HabitButtons.begin();i!=HabitButtons.end();i++){
+                if((*i)->Get_Title()==ui->IssueTitle->text()){
+                    HabitButtons.erase(i);
+                    (*i)->setParent(nullptr);
+                    ui->ScheduleContent->layout()->removeWidget((*i));
+                    (*i)->setParent(nullptr);
+                    //(*i)->deleteLater();
+                    //Change_Schedule();
+                    ui->IssueTitle->setText("null");
+                    ui->IssueDura->setText("null");
+                    ui->IssueDetail->setText("null");
+                    ui->Kinds->setText("No Kind");
+                    ui->checkBox->setCheckState(Qt::Unchecked);
+                    ui->ScheduleScroll->viewport()->update();
+                    HabitSaveToFile(Date+".json");
+                    break;
+                }
             }
         }
     }
