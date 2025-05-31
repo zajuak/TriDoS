@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QDir>
+#include <QMessageBox>
 //更新不同的事件，点击显示细节，点击修改计划(返回事件名字Qstring作为索引),默认显示当天,看不同日子的计划只需要切换不同的dailyplan
 //加一个属性描述，完成情况的layout，给事件列表改成滚屏，习惯打卡事件储存（静态向量、录入函数）
 //给几个按钮加一下信号槽(今日事:复用一下longtermproject,(delete,modify)：对接longterm，返回字符串作为索引)
@@ -17,7 +18,7 @@ Issue::Issue(QString _Title, QString _Detail, QDateTime _Start, QDateTime _End, 
     ,IssueTitle(_Title)
     ,IssueStart(_Start)
     ,IssueEnd(_End)
-    ,IssueDetial(("\t"+_Detail))
+    ,IssueDetail((_Detail))
     ,IssueFinished(_Finished)
     ,IssueKind(_Kind)
 {
@@ -41,7 +42,7 @@ QString Issue::Get_Dura(){
     return tmp;
 }
 QString Issue::Get_Detail(){
-    return this->IssueDetial;
+    return this->IssueDetail;
 }
 QString Issue::Get_Kind(){
     return this->IssueKind;
@@ -57,7 +58,7 @@ void Issue::Set_State(const bool ck){
     return;
 }
 dailydata Issue::IssuetoData(){
-    dailydata tmp(IssueTitle,IssueDetial,IssueStart,IssueEnd,IssueKind,IssueFinished);
+    dailydata tmp(IssueTitle,IssueDetail,IssueStart,IssueEnd,IssueKind,IssueFinished);
     return tmp;
 }
 
@@ -68,6 +69,7 @@ DailyPlan::DailyPlan(QWidget *parent,QString _Date)
 {
     //init
     ui->setupUi(this);
+    //init detail
     IssueOnShow="";
     ui->IssueTitle->setText("null");
     ui->IssueDura->setText("null");
@@ -85,7 +87,7 @@ DailyPlan::DailyPlan(QWidget *parent,QString _Date)
     DTimer = new QTimer(this);
     connect(DTimer,&QTimer::timeout,this,&DailyPlan::Renew_DTime);
     DTimer->start(1000);
-
+    //start layout
     /*
     ui->ModiIssue->hide();
     ui->IssueDetail->hide();
@@ -95,10 +97,19 @@ DailyPlan::DailyPlan(QWidget *parent,QString _Date)
 
     //load schedule
     Load_Schedule();
-    dailydata newdata("well");
+    ui->HabitOrToday->setText("日程表");
+    ui->AddForToday->setText("创建日程");
+    Change_Schedule();
+    //dailydata newdata("well");
     //Add_Issue(newdata);
-    //enable modify
-    connect(ui->ModiIssue,&QPushButton::clicked,this,&DailyPlan::Modi_Issue);
+    //enable transtable
+    connect(ui->HabitOrToday,&QPushButton::clicked,this,&DailyPlan::Change_Table);
+    //enable modify and create
+    connect(ui->AddForToday, &QPushButton::clicked, this, &DailyPlan::showDialog);
+    //enable delete
+    connect(ui->DeleteIssue,&QPushButton::clicked,this,&DailyPlan::Delete_Issue);
+    //enable clearandcancle
+    connect(ui->ModiIssue,&QPushButton::clicked,this,&DailyPlan::CancelorClear);
 }
 
 DailyPlan::~DailyPlan()
@@ -120,40 +131,82 @@ void DailyPlan::Renew_DTime()
 void DailyPlan::Load_Schedule(){
     //读入当天计划
     ScheduleButtons.clear();
+    HabitButtons.clear();
+
     QString filename = Date+".json";
+    storedata.clear();
     LoadFromFile(filename);
-    for(dailydata &item : storedata){
-        Issue* tmp = new Issue(item.title(),item.detail(),item.start(),item.end(),item.kind(),item.finished(),ui->ScheduleContent);
-        ScheduleButtons.push_back(tmp);
+    if(!storedata.empty()){
+        for(dailydata &item : storedata){
+            Issue* tmp = new Issue(item.title(),item.detail(),item.start(),item.end(),item.kind(),item.finished(),nullptr);
+            connect(tmp,&Issue::Show_Issue,this,&DailyPlan::Show_Detail);
+            ScheduleButtons.push_back(tmp);
+        }
     }
     filename = "habit.json";
     storedata.clear();
     LoadFromFile(filename);
-    for(dailydata &item : storedata){
-        Issue* tmp = new Issue(item.title(),item.detail(),item.start(),item.end(),item.kind(),item.finished(),ui->ScheduleContent);
-        HabitButtons.push_back(tmp);
+    if(!storedata.empty()){
+        for(dailydata &item : storedata){
+            Issue* tmp = new Issue(item.title(),item.detail(),item.start(),item.end(),item.kind(),item.finished(),nullptr);
+            connect(tmp,&Issue::Show_Issue,this,&DailyPlan::Show_Detail);
+            HabitButtons.push_back(tmp);
+        }
     }
     storedata.clear();
-
-    QVBoxLayout *ScheduleLayout = new QVBoxLayout();
+}
+void DailyPlan::Change_Schedule(){//全面更新schedule
     int cnt=0;
-    for(auto i=ScheduleButtons.begin();i!=ScheduleButtons.end();i++){
-        (*i)->setMinimumHeight(30);
-        ScheduleLayout->insertWidget(ScheduleLayout->count(), (*i));
-        cnt++;
+    QVBoxLayout* newLayout = new QVBoxLayout;
+    if(ui->HabitOrToday->text() == "日程表"){
+        for(auto i=ScheduleButtons.begin();i!=ScheduleButtons.end();i++){
+            (*i)->setMinimumHeight(30);
+            (*i)->sizePolicy().setHorizontalPolicy(QSizePolicy::Preferred);
+            newLayout->insertWidget(newLayout->count(), (*i));
+            cnt++;
+        }
+    }
+    else{
+        for(auto i=HabitButtons.begin();i!=HabitButtons.end();i++){
+            (*i)->setMinimumHeight(30);
+            (*i)->sizePolicy().setHorizontalPolicy(QSizePolicy::Preferred);
+            newLayout->insertWidget(newLayout->count(), (*i));
+            cnt++;
+        }
     }
 
-    for(auto i=HabitButtons.begin();i!=HabitButtons.end();i++){
-        (*i)->setMinimumHeight(30);
-        ScheduleLayout->insertWidget(ScheduleLayout->count(), (*i));
-        cnt++;
+    QLayout *oldLayout = ui->ScheduleContent->layout();
+    if (oldLayout) {
+        while (QLayoutItem *item = oldLayout->takeAt(0)) {
+            if (item->widget()) {
+                item->widget()->setParent(nullptr);
+            }
+            delete item;
+        }
+        delete oldLayout;
     }
+    // 设置新布局
+    ui->ScheduleContent->setLayout(newLayout);
+
     ui->ScheduleContent->resize(250,50*cnt);
-    ui->ScheduleScroll->widget()->unsetLayoutDirection();
-    ui->ScheduleScroll->widget()->setLayout(ScheduleLayout);
+    ui->ScheduleScroll->viewport()->update();
 }
 
-void DailyPlan::IssueSaveToFile(const QString &filename)
+void DailyPlan::Change_Table(){
+    if(ui->HabitOrToday->text() == "日程表"){
+        ui->HabitOrToday->setText("习惯表");
+        ui->AddForToday->setText("创建习惯");
+        Change_Schedule();
+        return;
+    }
+    else{
+        ui->HabitOrToday->setText("日程表");
+        ui->AddForToday->setText("创建日程");
+        Change_Schedule();
+        return;
+    }
+}
+void DailyPlan::IssueSaveToFile(const QString filename)
 {
     QJsonArray jsonArray;
     for (auto i = ScheduleButtons.begin();i!= ScheduleButtons.end();i++) {
@@ -174,7 +227,7 @@ void DailyPlan::IssueSaveToFile(const QString &filename)
 
     qDebug() << "Daily数据已保存到:" << filename;
 }
-void DailyPlan::HabitSaveToFile(const QString &filename)
+void DailyPlan::HabitSaveToFile(const QString filename)
 {
     QJsonArray jsonArray;
     for (auto i = HabitButtons.begin();i!= HabitButtons.end();i++) {
@@ -184,7 +237,6 @@ void DailyPlan::HabitSaveToFile(const QString &filename)
 
     QJsonDocument doc(jsonArray);
     QFile file(filename);
-
     if (!file.open(QIODevice::WriteOnly)) {
         qWarning() << "无法打开文件用于写入:" << filename;
         return;
@@ -193,7 +245,7 @@ void DailyPlan::HabitSaveToFile(const QString &filename)
     file.write(doc.toJson());
     file.close();
 
-    qDebug() << "Daily数据已保存到:" << filename;
+    qDebug() << "Habit数据已保存到:" << filename;
 }
 void DailyPlan::LoadFromFile(const QString &filename)
 {
@@ -203,7 +255,7 @@ void DailyPlan::LoadFromFile(const QString &filename)
         return;
     }
 
-    if (!file.open(QIODevice::ReadOnly)) {
+    if (!file.open(QIODevice::ReadWrite)) {
         qWarning() << "无法打开文件用于读取:" << filename;
         return;
     }
@@ -214,6 +266,7 @@ void DailyPlan::LoadFromFile(const QString &filename)
     QJsonDocument doc = QJsonDocument::fromJson(data);
     if (doc.isNull() || !doc.isArray()) {
         qWarning() << "文件格式无效:" << filename;
+        storedata.clear();
         return;
     }
 
@@ -228,7 +281,7 @@ void DailyPlan::LoadFromFile(const QString &filename)
         }
     }
 
-    qDebug() << "从文件加载了" << storedata.size() << "个daily事项";
+    qDebug() << "从文件加载了" << storedata.size() << "个daily/habit事项";
 }
 
 void DailyPlan::Add_Issue(dailydata data){
@@ -236,7 +289,9 @@ void DailyPlan::Add_Issue(dailydata data){
     ScheduleButtons.push_back(NewIssue);
     connect(NewIssue,&Issue::Show_Issue,this,&DailyPlan::Show_Detail);
     IssueSaveToFile(Date+".json");
-    Load_Schedule();
+    NewIssue->setMinimumHeight(30);
+    NewIssue->sizePolicy().setHorizontalPolicy(QSizePolicy::Preferred);
+    Change_Schedule();
 }
 
 void DailyPlan::Add_Habit(dailydata data){
@@ -244,7 +299,9 @@ void DailyPlan::Add_Habit(dailydata data){
     HabitButtons.push_back(NewHabit);
     connect(NewHabit,&Issue::Show_Issue,this,&DailyPlan::Show_Detail);
     HabitSaveToFile("habit.json");
-    Load_Schedule();
+    NewHabit->setMinimumHeight(30);
+    NewHabit->sizePolicy().setHorizontalPolicy(QSizePolicy::Preferred);
+    Change_Schedule();
 }
 
 void DailyPlan::Show_Detail(Issue* Showed){
@@ -256,9 +313,47 @@ void DailyPlan::Show_Detail(Issue* Showed){
     ui->checkBox->setCheckState(Showed->Get_State());
 }
 
-void DailyPlan::Modi_Issue(){
+void DailyPlan::CancelorClear(){
+    if(ui->ModiIssue->text() == "Clear"){
+        ui->IssueTitle->setText("null");
+        ui->IssueDura->setText("null");
+        ui->IssueDetail->setText("null");
+        ui->Kinds->setText("No Kind");
+        ui->checkBox->setCheckState(Qt::Unchecked);
+    }
+    else{
+        ui->DeleteIssue->setText("Delete");
+        ui->ModiIssue->setText("Clear");
+    }
+}
+
+void DailyPlan::Delete_Issue(){
+    /*
     if(IssueOnShow!=""){
         emit Modi_Signal(IssueOnShow);
+    }
+    */
+    if (ui->DeleteIssue->text() == "Delete"){
+        ui->DeleteIssue->setText("Confirm Delete");
+        ui->ModiIssue->setText("Cancel");
+    }
+    else{
+        ui->DeleteIssue->setText("Delete");
+        ui->ModiIssue->setText("Clear");
+        for(auto i = ScheduleButtons.begin();i!=ScheduleButtons.end();i++){
+            if((*i)->Get_Title()==ui->IssueTitle->text()){
+                ScheduleButtons.erase(i);
+                ui->ScheduleContent->layout()->removeWidget((*i));
+                Change_Schedule();
+                ui->IssueTitle->setText("null");
+                ui->IssueDura->setText("null");
+                ui->IssueDetail->setText("null");
+                ui->Kinds->setText("No Kind");
+                ui->checkBox->setCheckState(Qt::Unchecked);
+                ui->ScheduleScroll->viewport()->update();
+                break;
+            }
+        }
     }
 }
 
@@ -280,3 +375,57 @@ void DailyPlan::on_checkBox_checkStateChanged(const Qt::CheckState &arg1)
     }
 }
 
+
+void DailyPlan::showDialog() {
+    InfoDialog dialog(this);
+    QString title;
+    QString detail = dialog.Detail();
+
+    if (dialog.exec() == QDialog::Accepted) {
+        // 获取输入内容
+        title = dialog.Title();
+        detail = dialog.Detail();
+        // 这里可以添加处理数据的代码
+        qDebug() << "title:" << title;
+        qDebug() << "detail:" << detail;
+        if(ui->AddForToday->text()=="创建日程"){
+            dailydata tmp(title,detail);
+            Add_Issue(tmp);
+        }
+        else{
+            dailydata tmp(title,detail,QDateTime::currentDateTime(),QDateTime::currentDateTime(),"Habit");
+            Add_Habit(tmp);
+        }
+    }
+}
+
+InfoDialog::InfoDialog(QWidget *parent) : QDialog(parent) {
+    setWindowTitle("填写信息");
+    setFixedSize(200, 200);
+
+    // 创建表单布局
+    QFormLayout *formLayout = new QFormLayout;
+
+    // 添加输入字段
+    TitleEdit = new QLineEdit;
+    DetailEdit = new QLineEdit;
+
+    formLayout->addRow("标题:", TitleEdit);
+    formLayout->addRow("细节:", DetailEdit);
+
+    // 创建确认按钮
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel
+    );
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+    // 设置主布局
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->addLayout(formLayout);
+    mainLayout->addWidget(buttonBox);
+    setLayout(mainLayout);
+}
+
+QString InfoDialog::Title() { return TitleEdit->text(); }
+QString InfoDialog::Detail() { return DetailEdit->text(); }

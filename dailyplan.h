@@ -9,6 +9,27 @@
 #include <QLabel>
 #include <QList>
 #include "dailydata.h"
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QMessageBox>
+
+// 自定义对话框类
+class InfoDialog : public QDialog {
+    Q_OBJECT
+public:
+    explicit InfoDialog(QWidget *parent = nullptr);
+
+    // 获取填写的信息
+    QString Title();
+    QString Detail();
+
+private:
+    QLineEdit *TitleEdit;
+    QLineEdit *DetailEdit;
+};
+
 
 namespace Ui {
 class DailyPlan;
@@ -42,7 +63,7 @@ private:
     QString IssueTitle;
     QDateTime IssueStart;
     QDateTime IssueEnd;
-    QString IssueDetial;
+    QString IssueDetail;
     bool IssueFinished;
     QString IssueKind;
 };
@@ -59,15 +80,19 @@ public:
     void Add_Issue(dailydata data);
     void Add_Habit(dailydata data);
     void Show_Detail(Issue* Showed);
-    void Modi_Issue();
-    void IssueSaveToFile(const QString &filename);
-    void HabitSaveToFile(const QString &filename);
+    void Delete_Issue();
+    void CancelorClear();
+    void IssueSaveToFile(const QString filename);
+    void HabitSaveToFile(const QString filename);
     void LoadFromFile(const QString &filename);
+    void Change_Table();
+    void Change_Schedule();
 
 
 private slots:
     void on_pomodroButton_clicked();
     void on_checkBox_checkStateChanged(const Qt::CheckState &arg1);
+    void showDialog();
 
 signals:
     void Modi_Signal(QString ToModi);
