@@ -87,6 +87,8 @@ public:
     void LoadFromFile(const QString &filename);
     void Change_Table();
     void Change_Schedule();
+    QString Date;
+    void setDate(const QString& newDate);
 
 
 private slots:
@@ -112,7 +114,7 @@ private:
     QList<dailydata> storedata;
     QPushButton ModiIssue;
     QString IssueOnShow;
-    QString Date;
+
 };
 
 

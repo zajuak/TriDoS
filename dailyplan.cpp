@@ -61,16 +61,31 @@ dailydata Issue::IssuetoData(){
     dailydata tmp(IssueTitle,IssueDetail,IssueStart,IssueEnd,IssueKind,IssueFinished);
     return tmp;
 }
+void DailyPlan::setDate(const QString& newDate) {
+    if (Date != newDate) {
+        // 1. 保存当前数据
+        IssueSaveToFile(Date + ".json");
 
+        // 2. 更新日期
+        Date = newDate;
+        ui->DayOnShow->setText(Date);
+
+        // 3. 重新加载数据
+        ScheduleButtons.clear();
+        Load_Schedule();
+        Change_Schedule();  // 强制刷新UI
+    }
+}
 DailyPlan::DailyPlan(QWidget *parent,QString _Date)
     : QWidget(parent)
-    , ui(new Ui::DailyPlan)
     ,Date(_Date)
+    , ui(new Ui::DailyPlan)
 {
     //init
     ui->setupUi(this);
     //init detail
     IssueOnShow="";
+
     ui->IssueTitle->setText("null");
     ui->IssueDura->setText("null");
     ui->IssueDetail->setText("null");
